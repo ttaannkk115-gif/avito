@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VOLT MASTER</title>
+    <title>VOLT MASTER | МАХАЧКАЛА</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
     <style>
@@ -14,79 +14,58 @@
         }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 0; overflow-x: hidden; }
         
-        /* Экран блокировки (Реклама в WhatsApp) */
-        #lock-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 10000; display: flex; align-items: center; justify-content: center;
-            padding: 20px; box-sizing: border-box; text-align: center; transition: opacity 0.5s ease;
-        }
-        .lock-content {
-            background: #161616; padding: 30px; border-radius: 25px; border: 1px solid var(--gold);
-            max-width: 400px; width: 100%; box-shadow: 0 0 30px rgba(255,193,7,0.2);
-        }
-        .lock-content h2 { color: var(--gold); margin-top: 0; font-size: 22px; }
-        .lock-content p { color: #ccc; font-size: 14px; line-height: 1.5; margin-bottom: 25px; }
-        .btn-verify {
-            background: #25D366; color: white; padding: 16px; border-radius: 12px;
-            text-decoration: none; display: block; font-weight: 800; margin-bottom: 12px;
-            text-transform: uppercase; font-size: 14px;
-        }
-        .btn-done {
-            background: transparent; color: var(--gold); border: 1px solid var(--gold);
-            padding: 12px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold;
-        }
+        #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; text-align: center; }
+        .lock-content { background: #161616; padding: 30px; border-radius: 25px; border: 1px solid var(--gold); max-width: 400px; width: 100%; box-shadow: 0 0 30px rgba(255,193,7,0.2); }
+        .btn-verify { background: #25D366; color: white; padding: 16px; border-radius: 12px; text-decoration: none; display: block; font-weight: 800; margin-bottom: 12px; text-transform: uppercase; }
+        .btn-done { background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 12px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold; }
 
-        /* Основной интерфейс */
-        .site-stats { background: #000; color: #777; font-size: 10px; text-align: center; padding: 8px; border-bottom: 1px solid #222; display: flex; justify-content: center; gap: 12px; text-transform: uppercase; }
+        .city-banner { background: linear-gradient(135deg, rgba(255,193,7,0.15) 0%, rgba(0,0,0,0) 100%); border: 1px solid rgba(255,193,7,0.3); border-radius: 20px; padding: 25px 15px; text-align: center; margin-bottom: 25px; }
+        .banner-label { color: var(--gold); font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; display: block; }
+        .banner-main-text { font-size: 28px; font-weight: 900; margin: 0; color: #fff; }
+
+        .site-stats { background: #000; color: #777; font-size: 10px; text-align: center; padding: 8px; border-bottom: 1px solid #222; display: flex; justify-content: center; gap: 12px; }
         .site-stats b { color: var(--gold); }
         .tabs { display: flex; background: #161616; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #333; }
-        .tab { flex: 1; padding: 18px; text-align: center; font-weight: bold; color: #888; cursor: pointer; font-size: 13px; transition: 0.3s; }
-        .tab.active { color: var(--gold); border-bottom: 3px solid var(--gold); background: rgba(255,193,7,0.05); }
+        .tab { flex: 1; padding: 18px; text-align: center; font-weight: bold; color: #888; cursor: pointer; }
+        .tab.active { color: var(--gold); border-bottom: 3px solid var(--gold); }
         .search-container { padding: 10px 15px; background: #111; }
-        .search-input { width: 100%; padding: 12px; background: #000; border: 1px solid #333; border-radius: 10px; color: #fff; outline: none; box-sizing: border-box; }
-        .container { padding: 15px; max-width: 500px; margin: auto; min-height: 80vh; }
-        .section { display: none; animation: fadeIn 0.3s ease; }
+        .search-input { width: 100%; padding: 12px; background: #000; border: 1px solid #333; border-radius: 10px; color: #fff; box-sizing: border-box; outline: none; }
+        .container { padding: 15px; max-width: 500px; margin: auto; }
+        .section { display: none; }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
         .card { background: var(--card); border-radius: 18px; overflow: hidden; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.08); position: relative; }
-        .card img { width: 100%; height: auto; max-height: 400px; object-fit: contain; background: #000; display: block; }
+        .card img { width: 100%; height: auto; display: block; background: #000; }
         .info { padding: 15px; }
         .price { color: var(--gold); font-size: 22px; font-weight: 900; }
-        .price.neg { color: #aaa; font-size: 15px; font-weight: 400; font-style: italic; }
-        .title { font-size: 18px; font-weight: 600; margin: 5px 0; color: #fff; }
-        .desc { font-size: 13px; color: #aaa; white-space: pre-wrap; margin-top: 8px; line-height: 1.4; }
-        .contact-btn { 
-            display: flex !important; align-items: center; justify-content: center; gap: 10px;
-            width: 100%; padding: 14px 0; margin: 15px 0 5px 0; 
-            color: #fff !important; text-align: center; text-decoration: none !important; 
-            border-radius: 14px !important; font-weight: 800; font-size: 14px; 
-            text-transform: uppercase; letter-spacing: 0.5px; border: none !important;
-        }
-        .btn-tg { background: var(--tg-grad) !important; box-shadow: 0 4px 15px rgba(0, 136, 204, 0.4); }
-        .btn-wa { background: var(--wa-grad) !important; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); }
-        .timer-bottom { text-align: center; padding: 10px; font-size: 11px; font-family: monospace; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.3); }
+        .title { font-size: 18px; font-weight: 600; margin: 5px 0; }
+        .desc { font-size: 13px; color: #aaa; white-space: pre-wrap; margin-top: 8px; }
+        .contact-btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 14px 0; margin-top: 15px; color: #fff; text-decoration: none; border-radius: 14px; font-weight: 800; font-size: 14px; }
+        .btn-tg { background: var(--tg-grad); }
+        .btn-wa { background: var(--wa-grad); }
+        .timer-bottom { text-align: center; padding: 10px; font-size: 11px; color: #666; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.05); }
         .actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; z-index: 10; }
-        .btn-sm { width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .form { background: #161616; padding: 20px; border-radius: 20px; border: 1px solid #333; }
-        input, textarea, select { width: 100%; margin-bottom: 12px; padding: 14px; border: 1px solid #333; border-radius: 12px; background: #000; color: #fff; box-sizing: border-box; }
+        .btn-sm { width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        .form { background: #161616; padding: 20px; border-radius: 20px; }
+        input, textarea, select { width: 100%; margin-bottom: 12px; padding: 14px; border: 1px solid #333; border-radius: 12px; background: #000; color: #fff; box-sizing: border-box; outline: none; }
         .btn-main { width: 100%; padding: 16px; background: var(--gold); border: none; border-radius: 12px; font-weight: 800; cursor: pointer; color: #000; }
-        .tag-item { background: rgba(255,193,7,0.1); border: 1px solid var(--gold); color: var(--gold); padding: 10px; border-radius: 12px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        
+        .whitelist-card { background: #111; border: 1px solid var(--gold); padding: 15px; border-radius: 20px; margin-bottom: 20px; }
+        .tag-item { background: rgba(255,193,7,0.1); border: 1px solid var(--gold); padding: 12px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .tag-id { color: var(--gold); font-weight: bold; font-size: 15px; }
+        .tag-status { color: #888; font-size: 12px; margin-left: 5px; }
+        .limit-msg { color: var(--danger); font-size: 12px; text-align: center; margin-top: 10px; font-weight: bold; display: none; line-height: 1.4; }
     </style>
 </head>
 <body>
 
 <div id="lock-screen">
     <div class="lock-content">
-        <h2>⚡ ДОСТУП ОГРАНИЧЕН</h2>
-        <p>Для использования <b>VOLT MASTER</b>, опубликуйте эту ссылку в своём <b>статусе WhatsApp</b> на 24 часа:</p>
-        
-        <a href="whatsapp://send?text=Лучшая площадка объявлений Заходи: https://golnk.ru/lr8Xk" 
-           class="btn-verify" onclick="markShared()">
-           📢 ВЫСТАВИТЬ В СТАТУС
-        </a>
-        
+        <h2 style="color:var(--gold)">⚡ ДОСТУП ОГРАНИЧЕН</h2>
+        <p>Выставьте ссылку в статус WhatsApp:</p>
+        <a href="whatsapp://send?text=Лучшая площадка объявлений Заходи: https://golnk.ru/lr8Xk" class="btn-verify" onclick="markShared()">📢 ВЫСТАВИТЬ В СТАТУС</a>
         <button class="btn-done" onclick="checkAccess()">Я ОПУБЛИКОВАЛ(А)</button>
-        <div id="lock-msg" style="margin-top:15px; font-size:11px; color: #777;">После публикации доступ откроется автоматически</div>
     </div>
 </div>
 
@@ -110,7 +89,7 @@
     <div id="create" class="section">
         <div id="admin-area"></div>
         <form id="adForm" class="form" onsubmit="return false;">
-            <div id="edit-type-container" style="display:none; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+            <div id="edit-type-container" style="display:none; margin-bottom:15px;">
                 <label style="color:var(--gold); font-size:11px; font-weight:bold;">СТАТУС (АДМИН):</label>
                 <select id="edit-p-type" style="margin-top:5px"><option value="n">Обычное (24ч)</option><option value="e">Вечное (⭐)</option></select>
             </div>
@@ -121,7 +100,9 @@
             <input type="file" id="inp-f" accept="image/*" style="display:none" onchange="prepImg()">
             <button type="button" class="btn-main" style="background:#222; color:var(--gold); margin-bottom:12px; border: 1px solid #444;" onclick="document.getElementById('inp-f').click()">📸 ФОТО</button>
             <div id="img-st" style="text-align:center; font-size:12px; margin-bottom:15px; color:var(--gold); font-weight:bold;"></div>
+            
             <button type="button" id="btn-save" class="btn-main" onclick="save()">ОПУБЛИКОВАТЬ</button>
+            <div id="limit-warning" class="limit-msg">Блокировка: Лимит 1 объявление в 24ч.<br>Даже если вы удалите старое, новое добавить нельзя!</div>
         </form>
     </div>
 </div>
@@ -131,42 +112,20 @@
     const database = firebase.database();
     const DB_PATH = "marketplace_ads", ADMIN_PATH = "marketplace_settings", MS_IN_24H = 86400000, ETERNAL_VAL = 9999999999999;
     
-    // Проверка доступа
-    if (localStorage.getItem('app_shared_2026') === 'true') {
-        document.getElementById('lock-screen').style.display = 'none';
-    }
+    if (localStorage.getItem('app_shared_2026') === 'true') { document.getElementById('lock-screen').style.display = 'none'; }
+    function markShared() { sessionStorage.setItem('clicked_share', 'true'); }
+    function checkAccess() { if (sessionStorage.getItem('clicked_share')) { localStorage.setItem('app_shared_2026', 'true'); location.reload(); } else { alert("Нажмите кнопку статуса!"); } }
 
-    let MY_ID = localStorage.getItem('user_id_2026');
-    if (!MY_ID) {
-        MY_ID = "VM-" + Math.floor(1000 + Math.random() * 9000) + "-" + Date.now().toString().slice(-4);
-        localStorage.setItem('user_id_2026', MY_ID);
-    }
+    let MY_ID = localStorage.getItem('user_id_2026') || "VM-" + Math.floor(Math.random() * 9000);
+    localStorage.setItem('user_id_2026', MY_ID);
     document.getElementById('my-id-display').innerHTML = `ID: <b>${MY_ID}</b>`;
 
     let ads = [], whitelist = {}, curImg = "", editId = null, isAdmin = false, clickCount = 0, timerInt = null;
-    let viewedAds = new Set();
-
-    database.ref(`${ADMIN_PATH}/users/${MY_ID}`).set(true);
-
-    // Логика блокировщика
-    function markShared() { sessionStorage.setItem('clicked_share', 'true'); }
-    function checkAccess() {
-        if (sessionStorage.getItem('clicked_share')) {
-            const msg = document.getElementById('lock-msg');
-            msg.innerText = "ПРОВЕРКА... ПОДОЖДИТЕ 3 СЕКУНДЫ";
-            msg.style.color = "var(--gold)";
-            setTimeout(() => {
-                localStorage.setItem('app_shared_2026', 'true');
-                document.getElementById('lock-screen').style.opacity = '0';
-                setTimeout(() => document.getElementById('lock-screen').style.display = 'none', 500);
-            }, 3000);
-        } else { alert("Сначала нажмите кнопку 'ВЫСТАВИТЬ В СТАТУС'!"); }
-    }
 
     function handleAdminAuth() {
         clickCount++;
         if (clickCount === 3) {
-            if (prompt("Пароль:") === "Gazik0303") { isAdmin = !isAdmin; render(); alert("АДМИН: " + (isAdmin ? "ВКЛ" : "ВЫКЛ")); }
+            if (prompt("Пароль:") === "Gazik0303") { isAdmin = !isAdmin; render(); alert("АДМИН: " + isAdmin); }
             clickCount = 0;
         } else { setTimeout(() => clickCount = 0, 1000); }
         tab('create');
@@ -176,31 +135,60 @@
         document.querySelectorAll('.tab, .section').forEach(el => el.classList.remove('active'));
         document.getElementById('t-'+n).classList.add('active');
         document.getElementById(n).classList.add('active');
-        document.getElementById('search-bar').style.display = (n === 'view') ? 'block' : 'none';
-        document.getElementById('edit-type-container').style.display = isAdmin ? 'block' : 'none';
-        if (n === 'create' && !editId) resetForm();
+        if (n === 'create') checkLimit();
         if (n === 'view') startTick(); else stopTick();
     }
 
-    function resetForm() {
-        editId = null; curImg = "";
-        document.getElementById('adForm').reset();
-        document.getElementById('img-st').innerText = "";
-        document.getElementById('btn-save').innerText = "ОПУБЛИКОВАТЬ";
-        document.getElementById('btn-save').disabled = false;
+    async function checkLimit() {
+        // ЕСЛИ В ВАЙТЛИСТЕ (ВРЕМ ИЛИ ВЕЧН) ИЛИ АДМИН - ЛИМИТОВ НЕТ
+        if (isAdmin || whitelist[MY_ID]) {
+            setBtnState(true);
+            return;
+        }
+
+        if (editId) {
+            setBtnState(true);
+            return;
+        }
+
+        const snap = await database.ref(`${ADMIN_PATH}/logs/${MY_ID}`).get();
+        const lastPostTime = snap.val() || 0;
+        const now = Date.now();
+
+        if (now - lastPostTime < MS_IN_24H) {
+            setBtnState(false);
+            const timeLeft = MS_IN_24H - (now - lastPostTime);
+            const h = Math.floor(timeLeft/3600000), m = Math.floor((timeLeft%3600000)/60000);
+            document.getElementById('limit-warning').innerHTML = `Лимит: 1 объявление в 24ч!<br>Доступ откроется через ${h}ч ${m}м.`;
+        } else {
+            setBtnState(true);
+        }
     }
 
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const id = entry.target.getAttribute('data-id');
-                if (id && !viewedAds.has(id)) {
-                    viewedAds.add(id);
-                    database.ref(`${DB_PATH}/${id}/views`).transaction(c => (c || 0) + 1);
-                }
-            }
-        });
-    }, { threshold: 0.5 });
+    function setBtnState(enabled) {
+        const btn = document.getElementById('btn-save');
+        const warn = document.getElementById('limit-warning');
+        btn.disabled = !enabled;
+        btn.style.opacity = enabled ? '1' : '0.5';
+        warn.style.display = enabled ? 'none' : 'block';
+    }
+
+    function prepImg() {
+        const file = document.getElementById('inp-f').files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas'); const MAX = 800;
+                let w = img.width, h = img.height;
+                if (w > MAX) { h *= MAX/w; w = MAX; }
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                curImg = canvas.toDataURL('image/jpeg', 0.7); 
+                document.getElementById('img-st').innerText = "ФОТО ГОТОВО ✅";
+            }; img.src = e.target.result;
+        }; reader.readAsDataURL(file);
+    }
 
     function load() {
         database.ref(DB_PATH).on('value', snap => {
@@ -211,92 +199,83 @@
                 return true;
             });
             render();
+            if (document.getElementById('create').classList.contains('active')) checkLimit();
         });
-        database.ref(`${ADMIN_PATH}/whitelist`).on('value', snap => { whitelist = snap.val() || {}; if(isAdmin) renderWhitelist(); });
-        database.ref(`${ADMIN_PATH}/totalVisits`).transaction(c => (c || 0) + 1);
+        database.ref(`${ADMIN_PATH}/whitelist`).on('value', snap => { 
+            whitelist = snap.val() || {}; 
+            if(isAdmin) renderAdminUI();
+            if (document.getElementById('create').classList.contains('active')) checkLimit(); 
+        });
         database.ref(`${ADMIN_PATH}/totalVisits`).on('value', s => document.getElementById('site-counter').innerHTML = `ВИЗИТЫ: <b>${s.val() || 0}</b>`);
         database.ref(`${ADMIN_PATH}/users`).on('value', snap => document.getElementById('user-counter').innerHTML = `ЮЗЕРЫ: <b>${snap.numChildren()}</b>`);
     }
 
+    function renderAdminUI() {
+        const area = document.getElementById('admin-area');
+        if(!isAdmin) { area.innerHTML = ''; return; }
+        area.innerHTML = `
+            <div class="whitelist-card">
+                <div id="wl-list"></div>
+                <div style="display:flex; gap:8px; margin-top:10px">
+                    <input type="text" id="wl-id-inp" placeholder="ID юзера" style="margin:0; flex:2">
+                    <select id="wl-type-inp" style="margin:0; flex:1; padding:10px; font-size:12px">
+                        <option value="vrem">Врем.</option>
+                        <option value="eternal">Вечн.</option>
+                    </select>
+                    <button class="btn-main" style="width:50px; padding:0" onclick="addWL()">+</button>
+                </div>
+            </div>`;
+        const list = document.getElementById('wl-list');
+        list.innerHTML = Object.keys(whitelist).map(id => `
+            <div class="tag-item">
+                <div><span class="tag-id">${id}</span><span class="tag-status">[${whitelist[id] === 'eternal' ? 'ВЕЧН' : 'ВРЕМ'}]</span></div>
+                <div style="display:flex; gap:10px; align-items:center">
+                    <span style="cursor:pointer; font-size:18px" onclick="toggleWL('${id}')">🔄</span>
+                    <span style="cursor:pointer; font-size:20px; color:var(--danger)" onclick="delWL('${id}')">✖</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
     function render() {
         const query = document.getElementById('searchInput').value.toLowerCase();
-        const adminArea = document.getElementById('admin-area');
         const feed = document.getElementById('feed');
-        if(isAdmin) {
-            adminArea.innerHTML = `<div class="form" style="margin-bottom:20px; border:1px solid var(--gold)">
-                <div id="whitelist-tags"></div>
-                <div style="display:flex; gap:8px; margin-top:10px">
-                    <input type="text" id="w-id" placeholder="ID юзера" style="margin:0">
-                    <select id="p-type" style="margin:0; width:100px"><option value="n">Врем.</option><option value="e">Вечн.</option></select>
-                    <button class="btn-main" style="width:50px; padding:0" onclick="addW()">+</button>
-                </div>
-            </div>`;
-            renderWhitelist();
-        } else { adminArea.innerHTML = ''; }
-        const filtered = ads.filter(a => a.title.toLowerCase().includes(query) || a.desc.toLowerCase().includes(query)).sort((a,b) => b.ts - a.ts);
-        feed.innerHTML = filtered.length ? filtered.map(a => {
+        if(isAdmin) renderAdminUI();
+
+        let html = `<div class="city-banner"><span class="banner-label">Бесплатные объявления</span><h1 class="banner-main-text">🌴 МАХАЧКАЛА</h1></div>`;
+        const filtered = ads.filter(a => a.title.toLowerCase().includes(query)).sort((a,b) => b.ts - a.ts);
+        
+        html += filtered.map(a => {
             const isMine = a.owner === MY_ID;
             const isEternal = a.ts === ETERNAL_VAL;
-            let contactLink = "#", contactClass = "btn-tg", contactText = "Telegram";
-            if (a.contact) {
-                const clean = a.contact.replace(/\D/g,'');
-                if (clean.length >= 10 && /^\d+$/.test(clean)) { contactLink = `https://wa.me/${clean}`; contactClass = "btn-wa"; contactText = "WhatsApp"; }
-                else { contactLink = a.contact.startsWith('http') ? a.contact : `https://t.me/${a.contact.replace('@','')}`; contactClass = "btn-tg"; contactText = "Telegram"; }
-            }
-            return `<div class="card" data-id="${a.id}">
+            let link = a.contact && a.contact.replace(/\D/g,'').length >= 10 ? `https://wa.me/${a.contact.replace(/\D/g,'')}` : `https://t.me/${a.contact && a.contact.replace('@','')}`;
+            return `<div class="card">
                 ${(isAdmin || isMine) ? `<div class="actions">
-                    ${isAdmin ? `<button class="btn-sm" style="background:#2196f3; color:#fff" onclick="up('${a.id}')">↑</button>` : ''}
                     <button class="btn-sm" style="background:var(--gold)" onclick="edit('${a.id}')">✎</button>
-                    <button class="btn-sm" style="background:var(--danger); color:#fff" onclick="del('${a.id}')">×</button>
+                    <button class="btn-sm" style="background:var(--danger); color:#fff" onclick="del('${a.id}')">✖</button>
                 </div>` : ''}
-                ${a.img ? `<img src="${a.img}" loading="lazy">` : ''}
+                ${a.img ? `<img src="${a.img}">` : ''}
                 <div class="info">
-                    <div style="display:flex; justify-content:space-between">
-                        ${a.price > 0 ? `<span class="price">${Number(a.price).toLocaleString()} ₽</span>` : `<span class="price neg">Цена договорная</span>`}
-                        <span style="color:#666; font-size:11px">👁 ${a.views || 0}</span>
-                    </div>
+                    <div style="display:flex; justify-content:space-between"><span class="price">${a.price > 0 ? a.price + ' ₽' : 'Договорная'}</span><span style="color:#666; font-size:11px">👁 ${a.views || 0}</span></div>
                     <div class="title">${a.title}</div>
                     <div class="desc">${a.desc}</div>
-                    ${a.contact ? `<a href="${contactLink}" target="_blank" class="contact-btn ${contactClass}"><span>💬</span> ${contactText}</a>` : ''}
+                    <a href="${link}" target="_blank" class="contact-btn ${link.includes('wa.me') ? 'btn-wa' : 'btn-tg'}">СВЯЗАТЬСЯ</a>
                 </div>
-                ${(isAdmin || isMine) ? `<div class="timer-bottom" style="${isEternal ? 'color:var(--gold); font-weight:bold' : ''}">${isEternal ? '⭐ ВЕЧНОЕ ОБЪЯВЛЕНИЕ' : `<span id="timer-${a.id}">...</span>`}</div>` : ''}
+                ${(isAdmin || isMine) ? `<div class="timer-bottom">${isEternal ? '⭐ ВЕЧНОЕ' : `<span id="timer-${a.id}">...</span>`}</div>` : ''}
             </div>`;
-        }).join('') : '<div style="text-align:center; padding:50px; color:#555">Объявлений нет</div>';
-        document.querySelectorAll('.card').forEach(c => observer.observe(c));
+        }).join('');
+        feed.innerHTML = html;
     }
 
-    function tick() {
-        const now = Date.now();
-        ads.forEach(a => {
-            const el = document.getElementById(`timer-${a.id}`);
-            if(!el || a.ts === ETERNAL_VAL) return;
-            const diff = MS_IN_24H - (now - a.ts);
-            if(diff <= 0) { el.innerText = "УДАЛЕНИЕ..."; return; }
-            const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
-            el.innerText = `УДАЛИТСЯ ЧЕРЕЗ: ${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-        });
+    async function addWL() {
+        const id = document.getElementById('wl-id-inp').value.trim();
+        const type = document.getElementById('wl-type-inp').value;
+        if(id) await database.ref(`${ADMIN_PATH}/whitelist/${id}`).set(type);
     }
-
-    function startTick() { stopTick(); timerInt = setInterval(tick, 1000); tick(); }
-    function stopTick() { clearInterval(timerInt); }
-
-    function prepImg() {
-        const file = document.getElementById('inp-f').files[0]; if(!file) return;
-        const btn = document.getElementById('btn-save');
-        btn.disabled = true;
-        document.getElementById('img-st').innerText = "СЖАТИЕ...";
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas'); const MAX = 800; let w = img.width, h = img.height;
-                if (w > MAX) { h *= MAX/w; w = MAX; }
-                canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                curImg = canvas.toDataURL('image/jpeg', 0.7); 
-                document.getElementById('img-st').innerText = "ГОТОВО ✅";
-                btn.disabled = false;
-            }; img.src = e.target.result;
-        }; reader.readAsDataURL(file);
+    async function delWL(id) { await database.ref(`${ADMIN_PATH}/whitelist/${id}`).remove(); }
+    async function toggleWL(id) {
+        const newType = whitelist[id] === 'eternal' ? 'vrem' : 'eternal';
+        await database.ref(`${ADMIN_PATH}/whitelist/${id}`).set(newType);
     }
 
     async function save() {
@@ -304,52 +283,50 @@
         const price = document.getElementById('inp-p').value || 0;
         const desc = document.getElementById('inp-d').value.trim();
         const contact = document.getElementById('inp-contact').value.trim();
+        if(!title) return;
+
         const now = Date.now();
-        const userStatus = whitelist[MY_ID];
-        if(!title) return alert("Введите название!");
-
-        if (!editId && !isAdmin && !userStatus) { 
-            const hasActive = ads.some(a => a.owner === MY_ID);
-            const lastPost = localStorage.getItem('last_post_time_2026') || 0;
-            if (hasActive || (now - lastPost) < MS_IN_24H) return alert("Лимит: 1 активный пост в 24ч.");
-        }
-
         let finalTs = now;
+
         if (editId) {
-            const old = ads.find(x => x.id === editId);
-            if (isAdmin) finalTs = document.getElementById('edit-p-type').value === 'e' ? ETERNAL_VAL : (old.ts === ETERNAL_VAL ? now : old.ts);
-            else finalTs = old.ts;
+            finalTs = (isAdmin && document.getElementById('edit-p-type').value === 'e') ? ETERNAL_VAL : ads.find(x => x.id === editId).ts;
         } else {
-            if (isAdmin) finalTs = document.getElementById('p-type').value === 'e' ? ETERNAL_VAL : now;
-            else if (userStatus === 'eternal') finalTs = ETERNAL_VAL;
+            // ЛОГИРУЕМ ТОЛЬКО ДЛЯ ОБЫЧНЫХ (КТО НЕ В СПИСКЕ)
+            if (!isAdmin && !whitelist[MY_ID]) {
+                await database.ref(`${ADMIN_PATH}/logs/${MY_ID}`).set(now);
+            }
+            if (isAdmin && document.getElementById('edit-p-type').value === 'e') finalTs = ETERNAL_VAL;
+            else if (whitelist[MY_ID] === 'eternal') finalTs = ETERNAL_VAL;
         }
 
-        const data = { title, price, desc, contact, img: curImg, owner: editId ? ads.find(x => x.id === editId).owner : MY_ID, views: editId ? (ads.find(x => x.id === editId).views || 0) : 0, ts: finalTs };
-        try {
-            if (editId) await database.ref(`${DB_PATH}/${editId}`).set(data);
-            else { await database.ref(DB_PATH).push(data); if (!isAdmin && !userStatus) localStorage.setItem('last_post_time_2026', now); }
-            resetForm(); tab('view');
-        } catch(e) { alert("Ошибка!"); }
+        const data = { title, price, desc, contact, img: curImg || (editId ? ads.find(x => x.id === editId).img : ""), owner: editId ? ads.find(x => x.id === editId).owner : MY_ID, ts: finalTs, views: editId ? (ads.find(x => x.id === editId).views || 0) : 0 };
+        if (editId) await database.ref(`${DB_PATH}/${editId}`).set(data); else await database.ref(DB_PATH).push(data);
+        editId = null; curImg = ""; document.getElementById('adForm').reset(); tab('view');
     }
 
     function edit(id) { 
         const a = ads.find(x => x.id === id); if(!a) return;
-        editId = id; document.getElementById('inp-t').value = a.title; 
-        document.getElementById('inp-p').value = a.price > 0 ? a.price : ""; 
-        document.getElementById('inp-d').value = a.desc;
-        document.getElementById('inp-contact').value = a.contact || ""; 
-        curImg = a.img || "";
-        if(curImg) document.getElementById('img-st').innerText = "ФОТО СОХРАНЕНО ✅";
-        if(isAdmin) document.getElementById('edit-p-type').value = a.ts === ETERNAL_VAL ? 'e' : 'n';
-        document.getElementById('btn-save').innerText = "СОХРАНИТЬ"; tab('create');
+        editId = id; document.getElementById('inp-t').value = a.title; document.getElementById('inp-p').value = a.price;
+        document.getElementById('inp-d').value = a.desc; document.getElementById('inp-contact').value = a.contact;
+        curImg = a.img || ""; if(isAdmin) document.getElementById('edit-p-type').value = a.ts === ETERNAL_VAL ? 'e' : 'n';
+        tab('create'); document.getElementById('btn-save').innerText = "СОХРАНИТЬ";
     }
 
-    async function addW() { const id = document.getElementById('w-id').value.trim(); const status = document.getElementById('p-type').value === 'e' ? 'eternal' : 'temporary'; if(id) { await database.ref(`${ADMIN_PATH}/whitelist/${id}`).set(status); document.getElementById('w-id').value = ""; } }
-    async function toggleW(id, cur) { await database.ref(`${ADMIN_PATH}/whitelist/${id}`).set(cur === 'eternal' ? 'temporary' : 'eternal'); }
-    async function delW(id) { if(confirm("Удалить пользователя?")) await database.ref(`${ADMIN_PATH}/whitelist/${id}`).remove(); }
-    function renderWhitelist() { const c = document.getElementById('whitelist-tags'); if(!c) return; c.innerHTML = Object.keys(whitelist).map(id => `<div class="tag-item"><span><b>${id}</b> [${whitelist[id] === 'eternal' ? 'ВЕЧН' : 'ВРЕМ'}]</span><div><button onclick="toggleW('${id}', '${whitelist[id]}')" style="border:none; background:none; color:#fff; cursor:pointer; font-size:16px; margin-right:10px">🔄</button><button onclick="delW('${id}')" style="border:none; background:none; color:var(--danger); cursor:pointer; font-size:16px">✖</button></div></div>`).join(''); }
-    async function up(id) { const a = ads.find(x => x.id === id); await database.ref(`${DB_PATH}/${id}`).update({ ts: a.ts === ETERNAL_VAL ? ETERNAL_VAL : Date.now(), f: Math.random() }); }
     async function del(id) { if(confirm("Удалить?")) await database.ref(`${DB_PATH}/${id}`).remove(); }
+
+    function tick() {
+        ads.forEach(a => {
+            const el = document.getElementById(`timer-${a.id}`);
+            if(!el || a.ts === ETERNAL_VAL) return;
+            const diff = MS_IN_24H - (Date.now() - a.ts);
+            if(diff <= 0) { el.innerText = "УДАЛЕНИЕ..."; return; }
+            const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+            el.innerText = `До удаления: ${h}ч ${m}м ${s}с`;
+        });
+    }
+
+    function startTick() { stopTick(); timerInt = setInterval(tick, 1000); tick(); }
+    function stopTick() { clearInterval(timerInt); }
 
     load(); startTick();
 </script>
