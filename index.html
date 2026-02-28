@@ -13,6 +13,30 @@
             --wa-grad: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
         }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 0; overflow-x: hidden; }
+        
+        /* Экран блокировки (Реклама в WhatsApp) */
+        #lock-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 10000; display: flex; align-items: center; justify-content: center;
+            padding: 20px; box-sizing: border-box; text-align: center; transition: opacity 0.5s ease;
+        }
+        .lock-content {
+            background: #161616; padding: 30px; border-radius: 25px; border: 1px solid var(--gold);
+            max-width: 400px; width: 100%; box-shadow: 0 0 30px rgba(255,193,7,0.2);
+        }
+        .lock-content h2 { color: var(--gold); margin-top: 0; font-size: 22px; }
+        .lock-content p { color: #ccc; font-size: 14px; line-height: 1.5; margin-bottom: 25px; }
+        .btn-verify {
+            background: #25D366; color: white; padding: 16px; border-radius: 12px;
+            text-decoration: none; display: block; font-weight: 800; margin-bottom: 12px;
+            text-transform: uppercase; font-size: 14px;
+        }
+        .btn-done {
+            background: transparent; color: var(--gold); border: 1px solid var(--gold);
+            padding: 12px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold;
+        }
+
+        /* Основной интерфейс */
         .site-stats { background: #000; color: #777; font-size: 10px; text-align: center; padding: 8px; border-bottom: 1px solid #222; display: flex; justify-content: center; gap: 12px; text-transform: uppercase; }
         .site-stats b { color: var(--gold); }
         .tabs { display: flex; background: #161616; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #333; }
@@ -37,11 +61,9 @@
             color: #fff !important; text-align: center; text-decoration: none !important; 
             border-radius: 14px !important; font-weight: 800; font-size: 14px; 
             text-transform: uppercase; letter-spacing: 0.5px; border: none !important;
-            box-sizing: border-box; transition: all 0.2s ease; overflow: hidden;
         }
         .btn-tg { background: var(--tg-grad) !important; box-shadow: 0 4px 15px rgba(0, 136, 204, 0.4); }
         .btn-wa { background: var(--wa-grad) !important; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); }
-        .contact-btn:active { transform: scale(0.97); filter: brightness(1.1); }
         .timer-bottom { text-align: center; padding: 10px; font-size: 11px; font-family: monospace; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.3); }
         .actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; z-index: 10; }
         .btn-sm { width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
@@ -52,6 +74,21 @@
     </style>
 </head>
 <body>
+
+<div id="lock-screen">
+    <div class="lock-content">
+        <h2>⚡ ДОСТУП ОГРАНИЧЕН</h2>
+        <p>Для использования <b>VOLT MASTER</b>, опубликуйте эту ссылку в своём <b>статусе WhatsApp</b> на 24 часа:</p>
+        
+        <a href="whatsapp://send?text=Лучшая площадка объявлений Заходи: https://golnk.ru/lr8Xk" 
+           class="btn-verify" onclick="markShared()">
+           📢 ВЫСТАВИТЬ В СТАТУС
+        </a>
+        
+        <button class="btn-done" onclick="checkAccess()">Я ОПУБЛИКОВАЛ(А)</button>
+        <div id="lock-msg" style="margin-top:15px; font-size:11px; color: #777;">После публикации доступ откроется автоматически</div>
+    </div>
+</div>
 
 <div class="site-stats">
     <span id="site-counter">ВИЗИТЫ: <b>...</b></span>
@@ -94,6 +131,11 @@
     const database = firebase.database();
     const DB_PATH = "marketplace_ads", ADMIN_PATH = "marketplace_settings", MS_IN_24H = 86400000, ETERNAL_VAL = 9999999999999;
     
+    // Проверка доступа
+    if (localStorage.getItem('app_shared_2026') === 'true') {
+        document.getElementById('lock-screen').style.display = 'none';
+    }
+
     let MY_ID = localStorage.getItem('user_id_2026');
     if (!MY_ID) {
         MY_ID = "VM-" + Math.floor(1000 + Math.random() * 9000) + "-" + Date.now().toString().slice(-4);
@@ -105,6 +147,21 @@
     let viewedAds = new Set();
 
     database.ref(`${ADMIN_PATH}/users/${MY_ID}`).set(true);
+
+    // Логика блокировщика
+    function markShared() { sessionStorage.setItem('clicked_share', 'true'); }
+    function checkAccess() {
+        if (sessionStorage.getItem('clicked_share')) {
+            const msg = document.getElementById('lock-msg');
+            msg.innerText = "ПРОВЕРКА... ПОДОЖДИТЕ 3 СЕКУНДЫ";
+            msg.style.color = "var(--gold)";
+            setTimeout(() => {
+                localStorage.setItem('app_shared_2026', 'true');
+                document.getElementById('lock-screen').style.opacity = '0';
+                setTimeout(() => document.getElementById('lock-screen').style.display = 'none', 500);
+            }, 3000);
+        } else { alert("Сначала нажмите кнопку 'ВЫСТАВИТЬ В СТАТУС'!"); }
+    }
 
     function handleAdminAuth() {
         clickCount++;
@@ -122,7 +179,7 @@
         document.getElementById('search-bar').style.display = (n === 'view') ? 'block' : 'none';
         document.getElementById('edit-type-container').style.display = isAdmin ? 'block' : 'none';
         if (n === 'create' && !editId) resetForm();
-        if (n === 'view') { startTick(); } else { stopTick(); }
+        if (n === 'view') startTick(); else stopTick();
     }
 
     function resetForm() {
@@ -130,6 +187,7 @@
         document.getElementById('adForm').reset();
         document.getElementById('img-st').innerText = "";
         document.getElementById('btn-save').innerText = "ОПУБЛИКОВАТЬ";
+        document.getElementById('btn-save').disabled = false;
     }
 
     const observer = new IntersectionObserver((entries) => {
@@ -179,7 +237,6 @@
         feed.innerHTML = filtered.length ? filtered.map(a => {
             const isMine = a.owner === MY_ID;
             const isEternal = a.ts === ETERNAL_VAL;
-            const showTimer = isAdmin || isMine;
             let contactLink = "#", contactClass = "btn-tg", contactText = "Telegram";
             if (a.contact) {
                 const clean = a.contact.replace(/\D/g,'');
@@ -202,7 +259,7 @@
                     <div class="desc">${a.desc}</div>
                     ${a.contact ? `<a href="${contactLink}" target="_blank" class="contact-btn ${contactClass}"><span>💬</span> ${contactText}</a>` : ''}
                 </div>
-                ${showTimer ? `<div class="timer-bottom" style="${isEternal ? 'color:var(--gold); font-weight:bold' : ''}">${isEternal ? '⭐ ВЕЧНОЕ ОБЪЯВЛЕНИЕ' : `<span id="timer-${a.id}">...</span>`}</div>` : ''}
+                ${(isAdmin || isMine) ? `<div class="timer-bottom" style="${isEternal ? 'color:var(--gold); font-weight:bold' : ''}">${isEternal ? '⭐ ВЕЧНОЕ ОБЪЯВЛЕНИЕ' : `<span id="timer-${a.id}">...</span>`}</div>` : ''}
             </div>`;
         }).join('') : '<div style="text-align:center; padding:50px; color:#555">Объявлений нет</div>';
         document.querySelectorAll('.card').forEach(c => observer.observe(c));
@@ -223,25 +280,10 @@
     function startTick() { stopTick(); timerInt = setInterval(tick, 1000); tick(); }
     function stopTick() { clearInterval(timerInt); }
 
-    async function addW() { 
-        const id = document.getElementById('w-id').value.trim();
-        const status = document.getElementById('p-type').value === 'e' ? 'eternal' : 'temporary';
-        if(id) { await database.ref(`${ADMIN_PATH}/whitelist/${id}`).set(status); document.getElementById('w-id').value = ""; }
-    }
-    
-    async function toggleW(id, cur) { 
-        await database.ref(`${ADMIN_PATH}/whitelist/${id}`).set(cur === 'eternal' ? 'temporary' : 'eternal'); 
-    }
-    
-    async function delW(id) { if(confirm("Удалить пользователя?")) await database.ref(`${ADMIN_PATH}/whitelist/${id}`).remove(); }
-    
-    function renderWhitelist() { 
-        const c = document.getElementById('whitelist-tags'); if(!c) return;
-        c.innerHTML = Object.keys(whitelist).map(id => `<div class="tag-item"><span><b>${id}</b> [${whitelist[id] === 'eternal' ? 'ВЕЧН' : 'ВРЕМ'}]</span><div><button onclick="toggleW('${id}', '${whitelist[id]}')" style="border:none; background:none; color:#fff; cursor:pointer; font-size:16px; margin-right:10px">🔄</button><button onclick="delW('${id}')" style="border:none; background:none; color:var(--danger); cursor:pointer; font-size:16px">✖</button></div></div>`).join('');
-    }
-
     function prepImg() {
         const file = document.getElementById('inp-f').files[0]; if(!file) return;
+        const btn = document.getElementById('btn-save');
+        btn.disabled = true;
         document.getElementById('img-st').innerText = "СЖАТИЕ...";
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -250,7 +292,9 @@
                 const canvas = document.createElement('canvas'); const MAX = 800; let w = img.width, h = img.height;
                 if (w > MAX) { h *= MAX/w; w = MAX; }
                 canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                curImg = canvas.toDataURL('image/jpeg', 0.7); document.getElementById('img-st').innerText = "ГОТОВО ✅";
+                curImg = canvas.toDataURL('image/jpeg', 0.7); 
+                document.getElementById('img-st').innerText = "ГОТОВО ✅";
+                btn.disabled = false;
             }; img.src = e.target.result;
         }; reader.readAsDataURL(file);
     }
@@ -264,7 +308,6 @@
         const userStatus = whitelist[MY_ID];
         if(!title) return alert("Введите название!");
 
-        // ИСПРАВЛЕННАЯ ЛОГИКА ЛИМИТОВ: статус temporary теперь снимает лимит на количество постов
         if (!editId && !isAdmin && !userStatus) { 
             const hasActive = ads.some(a => a.owner === MY_ID);
             const lastPost = localStorage.getItem('last_post_time_2026') || 0;
@@ -279,7 +322,6 @@
         } else {
             if (isAdmin) finalTs = document.getElementById('p-type').value === 'e' ? ETERNAL_VAL : now;
             else if (userStatus === 'eternal') finalTs = ETERNAL_VAL;
-            // Если temporary, ts остается обычным (now), но проверка лимита выше была пройдена
         }
 
         const data = { title, price, desc, contact, img: curImg, owner: editId ? ads.find(x => x.id === editId).owner : MY_ID, views: editId ? (ads.find(x => x.id === editId).views || 0) : 0, ts: finalTs };
@@ -290,19 +332,24 @@
         } catch(e) { alert("Ошибка!"); }
     }
 
-    async function up(id) { 
-        const a = ads.find(x => x.id === id);
-        await database.ref(`${DB_PATH}/${id}`).update({ ts: a.ts === ETERNAL_VAL ? ETERNAL_VAL : Date.now(), f: Math.random() }); 
-    }
-    async function del(id) { if(confirm("Удалить?")) await database.ref(`${DB_PATH}/${id}`).remove(); }
     function edit(id) { 
         const a = ads.find(x => x.id === id); if(!a) return;
         editId = id; document.getElementById('inp-t').value = a.title; 
-        document.getElementById('inp-p').value = a.price > 0 ? a.price : ""; document.getElementById('inp-d').value = a.desc;
-        document.getElementById('inp-contact').value = a.contact || ""; curImg = a.img || "";
+        document.getElementById('inp-p').value = a.price > 0 ? a.price : ""; 
+        document.getElementById('inp-d').value = a.desc;
+        document.getElementById('inp-contact').value = a.contact || ""; 
+        curImg = a.img || "";
+        if(curImg) document.getElementById('img-st').innerText = "ФОТО СОХРАНЕНО ✅";
         if(isAdmin) document.getElementById('edit-p-type').value = a.ts === ETERNAL_VAL ? 'e' : 'n';
         document.getElementById('btn-save').innerText = "СОХРАНИТЬ"; tab('create');
     }
+
+    async function addW() { const id = document.getElementById('w-id').value.trim(); const status = document.getElementById('p-type').value === 'e' ? 'eternal' : 'temporary'; if(id) { await database.ref(`${ADMIN_PATH}/whitelist/${id}`).set(status); document.getElementById('w-id').value = ""; } }
+    async function toggleW(id, cur) { await database.ref(`${ADMIN_PATH}/whitelist/${id}`).set(cur === 'eternal' ? 'temporary' : 'eternal'); }
+    async function delW(id) { if(confirm("Удалить пользователя?")) await database.ref(`${ADMIN_PATH}/whitelist/${id}`).remove(); }
+    function renderWhitelist() { const c = document.getElementById('whitelist-tags'); if(!c) return; c.innerHTML = Object.keys(whitelist).map(id => `<div class="tag-item"><span><b>${id}</b> [${whitelist[id] === 'eternal' ? 'ВЕЧН' : 'ВРЕМ'}]</span><div><button onclick="toggleW('${id}', '${whitelist[id]}')" style="border:none; background:none; color:#fff; cursor:pointer; font-size:16px; margin-right:10px">🔄</button><button onclick="delW('${id}')" style="border:none; background:none; color:var(--danger); cursor:pointer; font-size:16px">✖</button></div></div>`).join(''); }
+    async function up(id) { const a = ads.find(x => x.id === id); await database.ref(`${DB_PATH}/${id}`).update({ ts: a.ts === ETERNAL_VAL ? ETERNAL_VAL : Date.now(), f: Math.random() }); }
+    async function del(id) { if(confirm("Удалить?")) await database.ref(`${DB_PATH}/${id}`).remove(); }
 
     load(); startTick();
 </script>
