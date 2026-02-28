@@ -102,7 +102,7 @@
             <div id="img-st" style="text-align:center; font-size:12px; margin-bottom:15px; color:var(--gold); font-weight:bold;"></div>
             
             <button type="button" id="btn-save" class="btn-main" onclick="save()">ОПУБЛИКОВАТЬ</button>
-            <div id="limit-warning" class="limit-msg">Блокировка: Лимит 1 объявление в 24ч.<br>Даже если вы удалите старое, новое добавить нельзя!</div>
+            <div id="limit-warning" class="limit-msg">Блокировка: Лимит 1 объявление в 24ч.</div>
         </form>
     </div>
 </div>
@@ -112,6 +112,7 @@
     const database = firebase.database();
     const DB_PATH = "marketplace_ads", ADMIN_PATH = "marketplace_settings", MS_IN_24H = 86400000, ETERNAL_VAL = 9999999999999;
     
+    // Блокировка доступа
     if (localStorage.getItem('app_shared_2026') === 'true') { document.getElementById('lock-screen').style.display = 'none'; }
     function markShared() { sessionStorage.setItem('clicked_share', 'true'); }
     function checkAccess() { if (sessionStorage.getItem('clicked_share')) { localStorage.setItem('app_shared_2026', 'true'); location.reload(); } else { alert("Нажмите кнопку статуса!"); } }
@@ -120,76 +121,62 @@
     localStorage.setItem('user_id_2026', MY_ID);
     document.getElementById('my-id-display').innerHTML = `ID: <b>${MY_ID}</b>`;
 
-    let ads = [], whitelist = {}, curImg = "", editId = null, isAdmin = false, clickCount = 0, timerInt = null;
+    let ads = [], whitelist = {}, curImg = "", editId = null, isAdmin = false, clickCount = 0;
+
+    // ТРЕКЕР ПРОСМОТРОВ (Сессионный)
+    function trackView(adId) {
+        let v = JSON.parse(sessionStorage.getItem('v_ads') || "[]");
+        if (v.includes(adId)) return;
+        v.push(adId);
+        sessionStorage.setItem('v_ads', JSON.stringify(v));
+        database.ref(`${DB_PATH}/${adId}/views`).transaction(c => (c || 0) + 1);
+    }
+
+    // НАВИГАЦИЯ
+    function tab(n) {
+        document.querySelectorAll('.tab, .section').forEach(el => el.classList.remove('active'));
+        document.getElementById('t-'+n).classList.add('active');
+        document.getElementById(n).classList.add('active');
+        if (n === 'create') {
+            checkLimit();
+            document.getElementById('edit-type-container').style.display = isAdmin ? 'block' : 'none';
+        } else {
+            editId = null;
+            document.getElementById('adForm').reset();
+            document.getElementById('btn-save').innerText = "ОПУБЛИКОВАТЬ";
+            document.getElementById('img-st').innerText = "";
+        }
+    }
 
     function handleAdminAuth() {
         clickCount++;
-        if (clickCount === 3) {
-            if (prompt("Пароль:") === "Gazik0303") { isAdmin = !isAdmin; render(); alert("АДМИН: " + isAdmin); }
+        if (clickCount >= 3) {
+            let p = prompt("Пароль:");
+            if (p === "Gazik0303") { isAdmin = !isAdmin; render(); alert("Админ: " + isAdmin); }
             clickCount = 0;
         } else { setTimeout(() => clickCount = 0, 1000); }
         tab('create');
     }
 
-    function tab(n) {
-        document.querySelectorAll('.tab, .section').forEach(el => el.classList.remove('active'));
-        document.getElementById('t-'+n).classList.add('active');
-        document.getElementById(n).classList.add('active');
-        if (n === 'create') checkLimit();
-        if (n === 'view') startTick(); else stopTick();
-    }
-
+    // ЛИМИТЫ
     async function checkLimit() {
-        // ЕСЛИ В ВАЙТЛИСТЕ (ВРЕМ ИЛИ ВЕЧН) ИЛИ АДМИН - ЛИМИТОВ НЕТ
-        if (isAdmin || whitelist[MY_ID]) {
-            setBtnState(true);
-            return;
-        }
-
-        if (editId) {
-            setBtnState(true);
-            return;
-        }
-
+        if (isAdmin || whitelist[MY_ID] || editId) { setBtnState(true); return; }
         const snap = await database.ref(`${ADMIN_PATH}/logs/${MY_ID}`).get();
-        const lastPostTime = snap.val() || 0;
-        const now = Date.now();
-
-        if (now - lastPostTime < MS_IN_24H) {
+        const last = snap.val() || 0;
+        if (Date.now() - last < MS_IN_24H) {
             setBtnState(false);
-            const timeLeft = MS_IN_24H - (now - lastPostTime);
-            const h = Math.floor(timeLeft/3600000), m = Math.floor((timeLeft%3600000)/60000);
-            document.getElementById('limit-warning').innerHTML = `Лимит: 1 объявление в 24ч!<br>Доступ откроется через ${h}ч ${m}м.`;
-        } else {
-            setBtnState(true);
-        }
+            const d = MS_IN_24H - (Date.now() - last);
+            document.getElementById('limit-warning').innerHTML = `Лимит! Еще ${Math.floor(d/3600000)}ч ${Math.floor((d%3600000)/60000)}м.`;
+        } else { setBtnState(true); }
     }
 
-    function setBtnState(enabled) {
-        const btn = document.getElementById('btn-save');
-        const warn = document.getElementById('limit-warning');
-        btn.disabled = !enabled;
-        btn.style.opacity = enabled ? '1' : '0.5';
-        warn.style.display = enabled ? 'none' : 'block';
+    function setBtnState(en) {
+        const b = document.getElementById('btn-save');
+        b.disabled = !en; b.style.opacity = en ? '1' : '0.5';
+        document.getElementById('limit-warning').style.display = en ? 'none' : 'block';
     }
 
-    function prepImg() {
-        const file = document.getElementById('inp-f').files[0]; if(!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas'); const MAX = 800;
-                let w = img.width, h = img.height;
-                if (w > MAX) { h *= MAX/w; w = MAX; }
-                canvas.width = w; canvas.height = h;
-                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                curImg = canvas.toDataURL('image/jpeg', 0.7); 
-                document.getElementById('img-st').innerText = "ФОТО ГОТОВО ✅";
-            }; img.src = e.target.result;
-        }; reader.readAsDataURL(file);
-    }
-
+    // ДАННЫЕ
     function load() {
         database.ref(DB_PATH).on('value', snap => {
             const data = snap.val(), now = Date.now();
@@ -199,55 +186,24 @@
                 return true;
             });
             render();
-            if (document.getElementById('create').classList.contains('active')) checkLimit();
         });
-        database.ref(`${ADMIN_PATH}/whitelist`).on('value', snap => { 
-            whitelist = snap.val() || {}; 
-            if(isAdmin) renderAdminUI();
-            if (document.getElementById('create').classList.contains('active')) checkLimit(); 
-        });
+        database.ref(`${ADMIN_PATH}/whitelist`).on('value', s => { whitelist = s.val() || {}; render(); });
+        database.ref(`${ADMIN_PATH}/totalVisits`).transaction(c => (c || 0) + 1);
         database.ref(`${ADMIN_PATH}/totalVisits`).on('value', s => document.getElementById('site-counter').innerHTML = `ВИЗИТЫ: <b>${s.val() || 0}</b>`);
-        database.ref(`${ADMIN_PATH}/users`).on('value', snap => document.getElementById('user-counter').innerHTML = `ЮЗЕРЫ: <b>${snap.numChildren()}</b>`);
-    }
-
-    function renderAdminUI() {
-        const area = document.getElementById('admin-area');
-        if(!isAdmin) { area.innerHTML = ''; return; }
-        area.innerHTML = `
-            <div class="whitelist-card">
-                <div id="wl-list"></div>
-                <div style="display:flex; gap:8px; margin-top:10px">
-                    <input type="text" id="wl-id-inp" placeholder="ID юзера" style="margin:0; flex:2">
-                    <select id="wl-type-inp" style="margin:0; flex:1; padding:10px; font-size:12px">
-                        <option value="vrem">Врем.</option>
-                        <option value="eternal">Вечн.</option>
-                    </select>
-                    <button class="btn-main" style="width:50px; padding:0" onclick="addWL()">+</button>
-                </div>
-            </div>`;
-        const list = document.getElementById('wl-list');
-        list.innerHTML = Object.keys(whitelist).map(id => `
-            <div class="tag-item">
-                <div><span class="tag-id">${id}</span><span class="tag-status">[${whitelist[id] === 'eternal' ? 'ВЕЧН' : 'ВРЕМ'}]</span></div>
-                <div style="display:flex; gap:10px; align-items:center">
-                    <span style="cursor:pointer; font-size:18px" onclick="toggleWL('${id}')">🔄</span>
-                    <span style="cursor:pointer; font-size:20px; color:var(--danger)" onclick="delWL('${id}')">✖</span>
-                </div>
-            </div>
-        `).join('');
+        database.ref(`${ADMIN_PATH}/users/${MY_ID}`).set(true);
+        database.ref(`${ADMIN_PATH}/users`).on('value', s => document.getElementById('user-counter').innerHTML = `ЮЗЕРЫ: <b>${s.numChildren()}</b>`);
     }
 
     function render() {
         const query = document.getElementById('searchInput').value.toLowerCase();
         const feed = document.getElementById('feed');
-        if(isAdmin) renderAdminUI();
-
         let html = `<div class="city-banner"><span class="banner-label">Бесплатные объявления</span><h1 class="banner-main-text">🌴 МАХАЧКАЛА</h1></div>`;
+        
         const filtered = ads.filter(a => a.title.toLowerCase().includes(query)).sort((a,b) => b.ts - a.ts);
         
         html += filtered.map(a => {
+            trackView(a.id);
             const isMine = a.owner === MY_ID;
-            const isEternal = a.ts === ETERNAL_VAL;
             let link = a.contact && a.contact.replace(/\D/g,'').length >= 10 ? `https://wa.me/${a.contact.replace(/\D/g,'')}` : `https://t.me/${a.contact && a.contact.replace('@','')}`;
             return `<div class="card">
                 ${(isAdmin || isMine) ? `<div class="actions">
@@ -261,46 +217,74 @@
                     <div class="desc">${a.desc}</div>
                     <a href="${link}" target="_blank" class="contact-btn ${link.includes('wa.me') ? 'btn-wa' : 'btn-tg'}">СВЯЗАТЬСЯ</a>
                 </div>
-                ${(isAdmin || isMine) ? `<div class="timer-bottom">${isEternal ? '⭐ ВЕЧНОЕ' : `<span id="timer-${a.id}">...</span>`}</div>` : ''}
+                ${(isAdmin || isMine) ? `<div class="timer-bottom">${a.ts === ETERNAL_VAL ? '⭐ ВЕЧНОЕ' : `<span id="timer-${a.id}">...</span>`}</div>` : ''}
             </div>`;
         }).join('');
         feed.innerHTML = html;
+        if(isAdmin) renderAdminUI();
     }
 
-    async function addWL() {
-        const id = document.getElementById('wl-id-inp').value.trim();
-        const type = document.getElementById('wl-type-inp').value;
-        if(id) await database.ref(`${ADMIN_PATH}/whitelist/${id}`).set(type);
+    function renderAdminUI() {
+        const area = document.getElementById('admin-area');
+        if(!isAdmin) { area.innerHTML = ''; return; }
+        area.innerHTML = `
+            <div class="whitelist-card">
+                <div id="wl-list"></div>
+                <div style="display:flex; gap:8px; margin-top:10px">
+                    <input type="text" id="wl-id-inp" placeholder="ID юзера" style="margin:0; flex:2">
+                    <select id="wl-type-inp" style="margin:0; flex:1"><option value="vrem">Врем.</option><option value="eternal">Вечн.</option></select>
+                    <button class="btn-main" style="width:50px; padding:0" onclick="addWL()">+</button>
+                </div>
+            </div>`;
+        document.getElementById('wl-list').innerHTML = Object.keys(whitelist).map(id => `
+            <div class="tag-item">
+                <div><span class="tag-id">${id}</span><span class="tag-status">[${whitelist[id] === 'eternal' ? 'ВЕЧН' : 'ВРЕМ'}]</span></div>
+                <div style="display:flex; gap:10px; align-items:center">
+                    <span style="cursor:pointer" onclick="toggleWL('${id}')">🔄</span>
+                    <span style="cursor:pointer; color:var(--danger)" onclick="delWL('${id}')">✖</span>
+                </div>
+            </div>`).join('');
     }
+
+    async function addWL() { const id = document.getElementById('wl-id-inp').value.trim(); if(id) await database.ref(`${ADMIN_PATH}/whitelist/${id}`).set(document.getElementById('wl-type-inp').value); }
     async function delWL(id) { await database.ref(`${ADMIN_PATH}/whitelist/${id}`).remove(); }
-    async function toggleWL(id) {
-        const newType = whitelist[id] === 'eternal' ? 'vrem' : 'eternal';
-        await database.ref(`${ADMIN_PATH}/whitelist/${id}`).set(newType);
+    async function toggleWL(id) { await database.ref(`${ADMIN_PATH}/whitelist/${id}`).set(whitelist[id] === 'eternal' ? 'vrem' : 'eternal'); }
+
+    function prepImg() {
+        const f = document.getElementById('inp-f').files[0]; if(!f) return;
+        const r = new FileReader();
+        r.onload = (e) => {
+            const i = new Image();
+            i.onload = () => {
+                const c = document.createElement('canvas'); let w = i.width, h = i.height;
+                if (w > 800) { h *= 800/w; w = 800; }
+                c.width = w; c.height = h;
+                c.getContext('2d').drawImage(i, 0, 0, w, h);
+                curImg = c.toDataURL('image/jpeg', 0.6); 
+                document.getElementById('img-st').innerText = "ФОТО ГОТОВО ✅";
+            }; i.src = e.target.result;
+        }; r.readAsDataURL(f);
     }
 
     async function save() {
-        const title = document.getElementById('inp-t').value.trim();
-        const price = document.getElementById('inp-p').value || 0;
-        const desc = document.getElementById('inp-d').value.trim();
-        const contact = document.getElementById('inp-contact').value.trim();
-        if(!title) return;
+        const t = document.getElementById('inp-t').value.trim();
+        const p = document.getElementById('inp-p').value || 0;
+        const d = document.getElementById('inp-d').value.trim();
+        const c = document.getElementById('inp-contact').value.trim();
+        if(!t) return;
 
-        const now = Date.now();
-        let finalTs = now;
-
-        if (editId) {
-            finalTs = (isAdmin && document.getElementById('edit-p-type').value === 'e') ? ETERNAL_VAL : ads.find(x => x.id === editId).ts;
+        let finalTs = Date.now();
+        if(editId) {
+            const old = ads.find(x => x.id === editId);
+            finalTs = (isAdmin && document.getElementById('edit-p-type').value === 'e') ? ETERNAL_VAL : old.ts;
         } else {
-            // ЛОГИРУЕМ ТОЛЬКО ДЛЯ ОБЫЧНЫХ (КТО НЕ В СПИСКЕ)
-            if (!isAdmin && !whitelist[MY_ID]) {
-                await database.ref(`${ADMIN_PATH}/logs/${MY_ID}`).set(now);
-            }
-            if (isAdmin && document.getElementById('edit-p-type').value === 'e') finalTs = ETERNAL_VAL;
-            else if (whitelist[MY_ID] === 'eternal') finalTs = ETERNAL_VAL;
+            if(!isAdmin && !whitelist[MY_ID]) await database.ref(`${ADMIN_PATH}/logs/${MY_ID}`).set(finalTs);
+            if((isAdmin && document.getElementById('edit-p-type').value === 'e') || whitelist[MY_ID] === 'eternal') finalTs = ETERNAL_VAL;
         }
 
-        const data = { title, price, desc, contact, img: curImg || (editId ? ads.find(x => x.id === editId).img : ""), owner: editId ? ads.find(x => x.id === editId).owner : MY_ID, ts: finalTs, views: editId ? (ads.find(x => x.id === editId).views || 0) : 0 };
-        if (editId) await database.ref(`${DB_PATH}/${editId}`).set(data); else await database.ref(DB_PATH).push(data);
+        const data = { title:t, price:p, desc:d, contact:c, img: curImg || (editId ? ads.find(x => x.id === editId).img : ""), owner: editId ? ads.find(x => x.id === editId).owner : MY_ID, ts: finalTs, views: editId ? (ads.find(x => x.id === editId).views || 0) : 0 };
+        if(editId) await database.ref(`${DB_PATH}/${editId}`).update(data); else await database.ref(DB_PATH).push(data);
+        
         editId = null; curImg = ""; document.getElementById('adForm').reset(); tab('view');
     }
 
@@ -308,8 +292,7 @@
         const a = ads.find(x => x.id === id); if(!a) return;
         editId = id; document.getElementById('inp-t').value = a.title; document.getElementById('inp-p').value = a.price;
         document.getElementById('inp-d').value = a.desc; document.getElementById('inp-contact').value = a.contact;
-        curImg = a.img || ""; if(isAdmin) document.getElementById('edit-p-type').value = a.ts === ETERNAL_VAL ? 'e' : 'n';
-        tab('create'); document.getElementById('btn-save').innerText = "СОХРАНИТЬ";
+        curImg = a.img || ""; tab('create'); document.getElementById('btn-save').innerText = "СОХРАНИТЬ";
     }
 
     async function del(id) { if(confirm("Удалить?")) await database.ref(`${DB_PATH}/${id}`).remove(); }
@@ -325,10 +308,7 @@
         });
     }
 
-    function startTick() { stopTick(); timerInt = setInterval(tick, 1000); tick(); }
-    function stopTick() { clearInterval(timerInt); }
-
-    load(); startTick();
+    load(); setInterval(tick, 1000);
 </script>
 </body>
 </html>
